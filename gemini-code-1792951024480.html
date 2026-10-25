@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mystic Oracle - Celestial Tarot Reading / 神秘神谕 - 星空塔罗占卜</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        midnight: '#0B0A1A',
+                        cosmic: '#15132A',
+                        mystic: '#1F1B3A',
+                        gold: {
+                            100: '#FFF2C6',
+                            300: '#F5D77F',
+                            500: '#D4AF37',
+                            700: '#A37F14',
+                        },
+                        astral: '#8A73D6'
+                    },
+                    fontFamily: {
+                        cinzelDeco: ['"Cinzel Decorative"', 'serif'],
+                        cinzel: ['Cinzel', 'serif'],
+                        cormorant: ['"Cormorant Garamond"', '"Noto Serif SC"', 'serif'],
+                        serifSC: ['"Noto Serif SC"', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Celestial & Card Styling */
+        body {
+            background: radial-gradient(circle at 50% 20%, #1c183b 0%, #0c0a1a 70%, #05040a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            font-family: 'Cormorant Garamond', 'Noto Serif SC', serif;
+        }
+
+        /* Gold Gradient Text */
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #FFF2C6 0%, #D4AF37 50%, #AA771C 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Card Container 3D Perspective */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+        }
+
+        .card-inner.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-inner.is-reversed {
+            transform: rotateY(180deg) rotateZ(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 0 15px rgba(212, 175, 55, 0.2);
+            overflow: hidden;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #15122c, #090814);
+            border: 2px solid #d4af37;
+        }
+
+        .card-front {
+            background: linear-gradient(180deg, #1a1738 0%, #0d0b1d 100%);
+            border: 2px solid #d4af37;
+            transform: rotateY(180deg);
+        }
+
+        /* Fan Deck Interactive Arc */
+        .fan-card {
+            transition: transform 0.4s ease, margin 0.4s ease, box-shadow 0.3s ease;
+            transform-origin: bottom center;
+            cursor: pointer;
+        }
+
+        .fan-card:hover {
+            transform: translateY(-28px) scale(1.08) !important;
+            box-shadow: 0 15px 30px rgba(212, 175, 55, 0.4);
+            z-index: 100 !important;
+        }
+
+        /* Shimmer Star Canvas */
+        #stars-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Subtle Gold Borders */
+        .gold-border {
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: inset 0 0 15px rgba(212, 175, 55, 0.05);
+        }
+
+        .gold-border-glow {
+            border: 1px solid rgba(212, 175, 55, 0.6);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.25), inset 0 0 10px rgba(212, 175, 55, 0.15);
+        }
+
+        /* Modal Overlay Transition */
+        .modal-fade {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0a1a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a244d;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d4af37;
+        }
+    </style>
+</head>
+<body class="relative flex flex-col min-h-screen text-slate-100 selection:bg-gold-500 selection:text-midnight">
+
+    <!-- Ambient Starfield Canvas -->
+    <canvas id="stars-canvas"></canvas>
+
+    <!-- Header Navigation -->
+    <header class="relative z-10 w-full border-b border-gold-500/20 bg-midnight/80 backdrop-blur-md sticky top-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('reading')">
+                <div class="w-10 h-10 rounded-full border border-gold-500/60 flex items-center justify-center bg-cosmic shadow-[0_0_12px_rgba(212,175,55,0.3)]">
+                    <i class="fa-solid fa-moon text-gold-300 text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-cinzelDeco text-lg sm:text-xl font-bold tracking-wider gold-gradient-text" id="app-title">MYSTIC ORACLE</h1>
+                    <p class="font-cinzel text-[10px] tracking-[0.25em] text-gold-500/80 uppercase" id="app-subtitle">Celestial Tarot</p>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="flex items-center gap-2 sm:gap-6 font-cinzel text-xs sm:text-sm tracking-wider">
+                <button onclick="switchTab('reading')" id="nav-reading" class="px-3 py-2 rounded-lg text-gold-300 border border-gold-500/40 bg-gold-500/10 transition">
+                    <i class="fa-solid fa-sparkles mr-1.5"></i><span id="nav-text-reading">Reading</span>
+                </button>
+                <button onclick="switchTab('daily')" id="nav-daily" class="px-3 py-2 rounded-lg text-slate-300 hover:text-gold-300 transition">
+                    <i class="fa-solid fa-sun mr-1.5"></i><span id="nav-text-daily">Daily Card</span>
+                </button>
+                <button onclick="switchTab('journal')" id="nav-journal" class="px-3 py-2 rounded-lg text-slate-300 hover:text-gold-300 transition">
+                    <i class="fa-solid fa-book-bookmark mr-1.5"></i><span id="nav-text-journal">Journal</span>
+                </button>
+            </nav>
+
+            <!-- Quick Controls (Language Switcher & Sound Toggle) -->
+            <div class="flex items-center gap-3">
+                <!-- Language Toggle Button -->
+                <button onclick="toggleLanguage()" id="lang-btn" class="px-3 py-1.5 rounded-full border border-gold-500/40 bg-gold-500/10 text-gold-300 hover:bg-gold-500/20 text-xs font-semibold tracking-wider transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-globe"></i>
+                    <span id="lang-label">中文</span>
+                </button>
+
+                <!-- Sound Button -->
+                <button onclick="toggleSound()" id="sound-btn" class="w-9 h-9 rounded-full border border-gold-500/30 flex items-center justify-center text-gold-300 hover:border-gold-500 transition" title="Toggle Ambient Sound">
+                    <i class="fa-solid fa-volume-high" id="sound-icon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- ================= TABS SECTION 1: READING SPREADS ================= -->
+        <section id="tab-reading" class="space-y-8">
+            
+            <!-- Spread Selection & Info Banner -->
+            <div class="text-center max-w-3xl mx-auto space-y-3">
+                <h2 class="font-cinzelDeco text-2xl sm:text-4xl gold-gradient-text" id="banner-title">Unveil Your Cosmic Destiny</h2>
+                <p class="text-base sm:text-lg text-slate-300 font-cormorant italic" id="banner-subtitle">
+                    Focus your energy, state your intention or question silently, then select your oracle spread to begin.
+                </p>
+
+                <!-- Spread Type Options -->
+                <div class="pt-4 flex flex-wrap justify-center gap-3 font-cinzel text-xs sm:text-sm">
+                    <button onclick="selectSpread('single')" id="spread-single" class="spread-btn px-4 py-2.5 rounded-xl border border-gold-500/60 bg-gold-500/20 text-gold-100 font-semibold shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                        <i class="fa-solid fa-diamond mr-1.5"></i><span id="spread-btn-single">Single Card</span>
+                    </button>
+                    <button onclick="selectSpread('three')" id="spread-three" class="spread-btn px-4 py-2.5 rounded-xl border border-gold-500/30 bg-cosmic/80 text-slate-300 hover:border-gold-500/60 transition">
+                        <i class="fa-solid fa-layer-group mr-1.5"></i><span id="spread-btn-three">3-Card Spread (Past / Present / Future)</span>
+                    </button>
+                    <button onclick="selectSpread('love')" id="spread-love" class="spread-btn px-4 py-2.5 rounded-xl border border-gold-500/30 bg-cosmic/80 text-slate-300 hover:border-gold-500/60 transition">
+                        <i class="fa-solid fa-heart mr-1.5"></i><span id="spread-btn-love">Love & Relationship (3 Cards)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Interactive Reading Desk Area -->
+            <div class="relative bg-cosmic/50 gold-border rounded-3xl p-6 sm:p-10 min-h-[520px] flex flex-col justify-between items-center overflow-hidden shadow-2xl backdrop-blur-md">
+
+                <!-- Spread Slots Container -->
+                <div id="spread-slots-container" class="w-full flex flex-wrap justify-center items-center gap-6 sm:gap-10 my-auto py-6">
+                    <!-- Dynamic Spread Card Slots generated by JS -->
+                </div>
+
+                <!-- Deck Shuffling / Picking Arc Deck -->
+                <div class="w-full flex flex-col items-center gap-6 mt-4">
+                    
+                    <!-- Action Bar -->
+                    <div id="deck-action-bar" class="flex items-center gap-4">
+                        <button onclick="shuffleDeckAnimation()" id="shuffle-btn" class="px-6 py-2.5 rounded-full border border-gold-500/60 bg-gold-500/10 hover:bg-gold-500/20 text-gold-300 font-cinzel text-xs sm:text-sm tracking-wider font-semibold transition flex items-center gap-2 shadow-[0_0_15px_rgba(212,175,55,0.15)]">
+                            <i class="fa-solid fa-shuffle"></i> <span id="btn-text-shuffle">Shuffle Cards</span>
+                        </button>
+                        <span id="reading-status-text" class="font-cinzel text-xs text-gold-300/80 tracking-widest uppercase">
+                            <span id="status-prefix">Pick</span> <span id="cards-needed-count" class="font-bold text-gold-100">1</span> <span id="status-suffix">card from the deck below</span>
+                        </span>
+                    </div>
+
+                    <!-- Fan Arc Interactive Selection Deck -->
+                    <div id="fan-deck-wrapper" class="relative w-full max-w-4xl h-44 sm:h-52 flex justify-center items-end pt-8 overflow-visible">
+                        <!-- Dynamic fan of SVG cards rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Reading Summary Footer / Interpretation Drawer Toggle -->
+                <div id="reading-complete-banner" class="hidden w-full text-center mt-6 pt-6 border-t border-gold-500/20">
+                    <button onclick="openReadingDetailsModal()" class="px-8 py-3 rounded-full bg-gradient-to-r from-gold-700 via-gold-500 to-gold-700 text-midnight font-cinzel font-bold text-sm tracking-widest uppercase shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-105 transition transform">
+                        <i class="fa-solid fa-scroll mr-2"></i> <span id="btn-text-reveal">Reveal Cosmic Guidance</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TABS SECTION 2: DAILY TAROT DRAW ================= -->
+        <section id="tab-daily" class="hidden space-y-8 max-w-4xl mx-auto">
+            <div class="text-center space-y-3">
+                <h2 class="font-cinzelDeco text-2xl sm:text-4xl gold-gradient-text" id="daily-title">Daily Oracle & Alignment</h2>
+                <p class="text-slate-300 font-cormorant text-lg italic" id="daily-subtitle">Draw a single card each day to anchor your intention and discover cosmic insights.</p>
+            </div>
+
+            <!-- Streak & Daily Status Card -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Streak Widget -->
+                <div class="bg-cosmic/60 gold-border rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-2">
+                    <div class="w-12 h-12 rounded-full border border-gold-500/40 bg-midnight flex items-center justify-center text-gold-300 text-xl">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                    <span id="streak-counter" class="font-cinzel text-3xl font-bold gold-gradient-text">0 Days</span>
+                    <span class="font-cinzel text-xs text-slate-400 uppercase tracking-wider" id="streak-label">Current Daily Streak</span>
+                </div>
+
+                <!-- Daily Draw Card Interactive Center -->
+                <div class="md:col-span-2 bg-cosmic/60 gold-border rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
+                    <div class="w-36 h-56 shrink-0 perspective-1000">
+                        <div id="daily-card-inner" class="card-inner cursor-pointer" onclick="drawDailyCard()">
+                            <!-- Back -->
+                            <div class="card-face card-back flex items-center justify-center p-2">
+                                <div class="w-full h-full border border-gold-500/40 rounded-lg flex flex-col items-center justify-center text-gold-500/60">
+                                    <i class="fa-solid fa-eye text-2xl mb-1"></i>
+                                    <span class="font-cinzel text-[10px] tracking-widest uppercase" id="daily-tap-text">Tap to Draw</span>
+                                </div>
+                            </div>
+                            <!-- Front -->
+                            <div id="daily-card-front" class="card-face card-front p-2 flex flex-col justify-between">
+                                <!-- Rendered dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 text-center sm:text-left flex-grow">
+                        <span id="daily-status-tag" class="px-2.5 py-1 rounded-full bg-gold-500/10 border border-gold-500/30 font-cinzel text-[10px] text-gold-300 uppercase tracking-widest">Ready For Today</span>
+                        <h3 id="daily-card-title" class="font-cinzel text-xl font-bold text-slate-100">Your Daily Revelation Awaits</h3>
+                        <p id="daily-card-excerpt" class="text-sm text-slate-300 font-cormorant leading-relaxed italic">
+                            Click the tarot card back to align your subconscious and reveal today's spiritual guide.
+                        </p>
+                        <div id="daily-actions" class="hidden pt-2">
+                            <button onclick="saveDailyToJournal()" class="px-4 py-2 rounded-lg bg-gold-500/20 border border-gold-500/50 text-gold-300 font-cinzel text-xs font-semibold hover:bg-gold-500/30 transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-bookmark"></i> <span id="btn-text-save-daily">Save to Journal</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TABS SECTION 3: JOURNAL & SAVED READINGS ================= -->
+        <section id="tab-journal" class="hidden space-y-6 max-w-5xl mx-auto">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gold-500/20 pb-4">
+                <div>
+                    <h2 class="font-cinzelDeco text-2xl sm:text-3xl gold-gradient-text" id="journal-title">Spiritual Chronicle</h2>
+                    <p class="text-slate-300 font-cormorant text-sm italic" id="journal-subtitle">Review past spreads, wisdom, and personal reflections.</p>
+                </div>
+                <button onclick="clearJournal()" class="text-xs font-cinzel text-red-400 hover:text-red-300 transition flex items-center gap-1 self-start sm:self-auto">
+                    <i class="fa-solid fa-trash-can"></i> <span id="btn-text-clear">Clear History</span>
+                </button>
+            </div>
+
+            <!-- Journal Entry List Container -->
+            <div id="journal-entries-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Dynamic Journal Cards injected by JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FULL INTERPRETATION MODAL -->
+    <div id="interpretation-modal" class="modal-fade fixed inset-0 z-50 bg-midnight/90 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none">
+        <div class="bg-cosmic gold-border-glow rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl transform transition-transform scale-95 duration-300" id="modal-container">
+            
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gold-500/20 flex items-center justify-between">
+                <div>
+                    <h3 class="font-cinzelDeco text-xl text-gold-300" id="modal-spread-title">Cosmic Spread Revelation</h3>
+                    <p class="font-cinzel text-xs text-slate-400 tracking-wider" id="modal-subtitle">Oracle Guidance & Synthesis</p>
+                </div>
+                <button onclick="closeReadingDetailsModal()" class="w-8 h-8 rounded-full border border-gold-500/30 text-gold-300 flex items-center justify-center hover:bg-gold-500/20 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Scrollable Content -->
+            <div class="p-6 sm:p-8 overflow-y-auto space-y-8 font-cormorant flex-grow" id="modal-body-content">
+                <!-- Dynamically Populated with Card Interpretation Breakdown -->
+            </div>
+
+            <!-- Modal Footer Note & Save Form -->
+            <div class="p-6 border-t border-gold-500/20 bg-midnight/60 flex flex-col sm:flex-row items-center gap-4 justify-between">
+                <input type="text" id="journal-user-note" placeholder="Add personal note/reflection..." class="w-full sm:w-2/3 bg-midnight/80 border border-gold-500/30 rounded-xl px-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-gold-500 font-cormorant">
+                <button onclick="saveCurrentReadingToJournal()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gold-500/20 border border-gold-500/60 text-gold-300 font-cinzel text-xs font-semibold hover:bg-gold-500/30 transition shrink-0 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> <span id="btn-text-save-chronicle">Save to Chronicle</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="relative z-10 w-full border-t border-gold-500/20 bg-midnight/90 py-6 text-center font-cinzel text-xs text-slate-500">
+        <p id="footer-text">© 2026 Mystic Oracle. Celestial Wisdom & Subconscious Mirror.</p>
+    </footer>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        /* ==========================================================================
+           1. BILINGUAL TEXT TRANSLATIONS & DICTIONARY
+           ========================================================================== */
+        const UI_I18N = {
+            en: {
+                appTitle: "MYSTIC ORACLE",
+                appSubtitle: "Celestial Tarot",
+                navReading: "Reading",
+                navDaily: "Daily Card",
+                navJournal: "Journal",
+                bannerTitle: "Unveil Your Cosmic Destiny",
+                bannerSubtitle: "Focus your energy, state your intention or question silently, then select your oracle spread to begin.",
+                spreadSingle: "Single Card",
+                spreadThree: "3-Card Spread (Past / Present / Future)",
+                spreadLove: "Love & Relationship (3 Cards)",
+                shuffleBtn: "Shuffle Cards",
+                statusPrefix: "Pick",
+                statusSuffix: "card(s) from the deck below",
+                revealBtn: "Reveal Cosmic Guidance",
+                dailyTitle: "Daily Oracle & Alignment",
+                dailySubtitle: "Draw a single card each day to anchor your intention and discover cosmic insights.",
+                streakLabel: "Current Daily Streak",
+                streakDays: "Days",
+                dailyTap: "Tap to Draw",
+                dailyReady: "Ready For Today",
+                dailyDrawn: "Drawn Today",
+                dailyDefaultTitle: "Your Daily Revelation Awaits",
+                dailyDefaultExcerpt: "Click the tarot card back to align your subconscious and reveal today's spiritual guide.",
+                saveDailyBtn: "Save to Journal",
+                journalTitle: "Spiritual Chronicle",
+                journalSubtitle: "Review past spreads, wisdom, and personal reflections.",
+                clearBtn: "Clear History",
+                modalSubtitle: "Oracle Guidance & Synthesis",
+                inputPlaceholder: "Add personal note/reflection...",
+                saveChronicleBtn: "Save to Chronicle",
+                footerText: "© 2026 Mystic Oracle. Celestial Wisdom & Subconscious Mirror.",
+                loveGuidance: "Love Guidance",
+                careerInsight: "Career Insight",
+                upright: "Upright",
+                reversed: "Reversed",
+                noJournal: "No readings saved yet. Complete a reading to record your journey.",
+                confirmClear: "Clear all recorded journal entries?",
+                savedAlert: "Reading successfully recorded in your chronicle!",
+                savedDailyAlert: "Saved daily draw to your spiritual chronicle!",
+                elements: { Air: "Air", Water: "Water", Earth: "Earth", Fire: "Fire" }
+            },
+            zh: {
+                appTitle: "神秘神谕",
+                appSubtitle: "星空塔罗占卜",
+                navReading: "塔罗占卜",
+                navDaily: "每日一牌",
+                navJournal: "占卜日志",
+                bannerTitle: "揭启你的宇宙命运",
+                bannerSubtitle: "集中你的能量，在内心默想你的问题或意图，然后选择牌阵开启解读。",
+                spreadSingle: "单牌指引",
+                spreadThree: "三牌时间线 (过去 / 现状 / 未来)",
+                spreadLove: "情感与关系 (3张牌)",
+                shuffleBtn: "洗牌重新抽取",
+                statusPrefix: "请从下方牌堆中选择",
+                statusSuffix: "张牌",
+                revealBtn: "揭示宇宙启示",
+                dailyTitle: "每日神谕与心灵调和",
+                dailySubtitle: "每天抽取一张牌，稳定你的内心意图，探索宇宙给你的指引。",
+                streakLabel: "连续打卡天数",
+                streakDays: "天",
+                dailyTap: "点击抽牌",
+                dailyReady: "今日待抽取",
+                dailyDrawn: "今日已抽取",
+                dailyDefaultTitle: "等待揭示你的每日启示",
+                dailyDefaultExcerpt: "点击塔罗牌背面，连接你的潜意识，开启今日的灵魂导师指引。",
+                saveDailyBtn: "保存至日志",
+                journalTitle: "灵性历程日志",
+                journalSubtitle: "回顾过去的牌阵、智慧启示与个人感悟。",
+                clearBtn: "清空历史记录",
+                modalSubtitle: "神谕指引与综合解读",
+                inputPlaceholder: "添加个人心得与反思...",
+                saveChronicleBtn: "保存至灵性日志",
+                footerText: "© 2026 神秘神谕. 宇宙智慧与潜意识之镜。",
+                loveGuidance: "感情指引",
+                careerInsight: "事业/学业洞察",
+                upright: "正位",
+                reversed: "逆位",
+                noJournal: "暂无保存的占卜记录。完成一次占卜即可记录你的灵性旅程。",
+                confirmClear: "确定要清空所有记录的日志吗？",
+                savedAlert: "占卜记录已成功保存至您的灵性日志！",
+                savedDailyAlert: "每日一牌已保存至灵性日志！",
+                elements: { Air: "风元素", Water: "水元素", Earth: "土元素", Fire: "火元素" }
+            }
+        };
+
+        /* MAJOR ARCANA BILINGUAL DATABASE */
+        const MAJOR_ARCANA = [
+            {
+                id: 0,
+                name: { en: "The Fool", zh: "愚人" },
+                numeral: "0",
+                element: "Air",
+                planet: "Uranus",
+                keywords: { en: ["New Beginnings", "Innocence", "Spontaneity", "Free Spirit"], zh: ["新的开始", "纯真", "自发性", "自由灵魂"] },
+                upright: { en: "A fresh journey begins. Trust the universe and leap into the unknown with an open heart. Unlimited potential awaits.", zh: "一段全新的旅程即将开始。相信宇宙的安排，带着开放的心态跃入未知，无限潜能等待着你。" },
+                reversed: { en: "Recklessness, risk-taking, or fear of taking a necessary leap of faith. Exercise mindfulness.", zh: "鲁莽行事、过度冒进或害怕走出必要的勇敢一步。请保持正念与谨慎。" },
+                love: { en: "Spontaneous romance or embarking on a novel emotional adventure with an open heart.", zh: "自然发生的浪漫，或带着纯粹的心拥抱全新的情感冒险。" },
+                career: { en: "Inception of a creative project, career pivot, or unconventional path forward.", zh: "创意的初始启动、职业方向的新转折，或选择一条不同寻常的发展道路。" }
+            },
+            {
+                id: 1,
+                name: { en: "The Magician", zh: "魔术师" },
+                numeral: "I",
+                element: "Air",
+                planet: "Mercury",
+                keywords: { en: ["Manifestation", "Resourcefulness", "Power", "Inspired Action"], zh: ["显化", "资源丰富", "力量", "灵感行动"] },
+                upright: { en: "You possess all necessary tools and wisdom to manifest your desired reality. Channel your willpower.", zh: "你已具备显化理想现实所需的一切工具与智慧。集中你的意志力行动吧。" },
+                reversed: { en: "Unused talents, illusion, or misdirection. Realign your intentions before acting.", zh: "未被发挥的潜能、幻觉或精力分散。行动前需重新审视并调整你的初衷。" },
+                love: { en: "Clear, charismatic communication that bridges hearts and manifests deep bonds.", zh: "清晰且富有魅力的沟通，能拉近心灵距离，建立深厚的情感连接。" },
+                career: { en: "Skillful execution of goals and turning vision into tangible, rewarding success.", zh: "高超的目标执行力，将宏伟的愿景转化为切实可见的成功。" }
+            },
+            {
+                id: 2,
+                name: { en: "The High Priestess", zh: "女祭司" },
+                numeral: "II",
+                element: "Water",
+                planet: "Moon",
+                keywords: { en: ["Intuition", "Sacred Knowledge", "Divine Feminine", "Subconscious"], zh: ["直觉", "神圣知识", "女性力量", "潜意识"] },
+                upright: { en: "Listen to the quiet voice within. Hidden truths and cosmic insights will be revealed through stillness.", zh: "倾听内心安静的声音。深层真理与宇宙启示将在静默中悄然显现。" },
+                reversed: { en: "Repressed intuition, secrets, or ignoring inner whispers. Reconnect with solitude.", zh: "直觉受到压抑、隐藏的秘密或忽略了内心的警示。请重新在独处中寻找自我。" },
+                love: { en: "Deep spiritual connection that transcends words. Trust your inner gut feeling.", zh: "超越言语的深层心灵契合。相信你对这份感情的最真实直觉。" },
+                career: { en: "Patience required. Observe behind the scenes before making strategic decisions.", zh: "需要保持耐心。在做出重大战略决策前，宜多观察、沉淀思考。" }
+            },
+            {
+                id: 3,
+                name: { en: "The Empress", zh: "皇后" },
+                numeral: "III",
+                element: "Earth",
+                planet: "Venus",
+                keywords: { en: ["Femininity", "Abundance", "Nurturing", "Creativity"], zh: ["丰盈", "丰收", "滋养", "创造力"] },
+                upright: { en: "A period of lush fertility, creation, and sensory richness. Embrace warmth, nature, and self-care.", zh: "充满孕育、创造与感官滋养的时期。拥抱温暖、自然以及对自我的关爱。" },
+                reversed: { en: "Creative blocks, dependence, or neglecting self-nourishment. Restore balance.", zh: "创造力受阻、过度依赖他人或忽视了自我的滋养。需恢复内在平衡。" },
+                love: { en: "Harmonious affection, maternal warmth, and thriving emotional tenderness.", zh: "和谐的依恋、包容的母性关怀，以及蓬勃发展的温柔情感。" },
+                career: { en: "A blossoming creative project that brings material and emotional reward.", zh: "创意项目迎来开花结果，带来物质与心灵上的双重回报。" }
+            },
+            {
+                id: 4,
+                name: { en: "The Emperor", zh: "皇帝" },
+                numeral: "IV",
+                element: "Fire",
+                planet: "Aries",
+                keywords: { en: ["Authority", "Structure", "Control", "Stability"], zh: ["权威", "秩序", "控制", "稳定"] },
+                upright: { en: "Establish strong foundations, discipline, and order. Take command of your realm with fair conviction.", zh: "建立坚实的基础、纪律与秩序。以公正和肯定的态度掌控你的领域。" },
+                reversed: { en: "Tyranny, rigidity, or lack of discipline. Seek flexibility without losing integrity.", zh: "专制、僵化或缺乏自我约束。在保持原则的同时学会灵活变通。" },
+                love: { en: "Stability, commitment, and protective devotion in long-term partnerships.", zh: "长期关系中的稳定感、责任承诺以及充满保护欲的专注。" },
+                career: { en: "Leadership opportunities, organized strategy, and setting firm professional boundaries.", zh: "展现领导力的时机，有条不紊的战略安排，以及清晰的职业界限。" }
+            },
+            {
+                id: 5,
+                name: { en: "The Hierophant", zh: "教皇" },
+                numeral: "V",
+                element: "Earth",
+                planet: "Taurus",
+                keywords: { en: ["Spiritual Wisdom", "Tradition", "Mentorship", "Conformity"], zh: ["精神智慧", "传统", "导师指引", "仪式感"] },
+                upright: { en: "Seek guidance from established wisdom, spiritual traditions, or trusted mentors to illuminate your path.", zh: "向传统智慧、成熟的体系或信赖的导师寻求指引，照亮你前行的道路。" },
+                reversed: { en: "Rebellion against outdated dogmas, personal beliefs, or forging your unique spiritual path.", zh: "对过时教条的反思，打破陈规，开辟属于你独特的信仰或道路。" },
+                love: { en: "Shared values, traditional commitments, or seeking deeper spiritual harmony.", zh: "共同的价值观、传统长久的承诺，或追求更高层次的精神共鸣。" },
+                career: { en: "Learning through formal institutions, teamwork, or adhering to proven methods.", zh: "通过正规学习、团队协作或遵循成熟的流程方法来取得长足进步。" }
+            },
+            {
+                id: 6,
+                name: { en: "The Lovers", zh: "恋人" },
+                numeral: "VI",
+                element: "Air",
+                planet: "Gemini",
+                keywords: { en: ["Love", "Harmony", "Relationships", "Values Choice"], zh: ["爱", "和谐", "契合关系", "价值观选择"] },
+                upright: { en: "Alignment of values, soul connections, and crucial choices guided by moral clarity.", zh: "价值观的高度契合、灵魂深处的联结，以及在道德清晰指引下的关键抉择。" },
+                reversed: { en: "Inalignment of values, conflict, or disharmony. Rebalance personal boundaries.", zh: "观念分歧、沟通冲突或不和谐。需要重新厘清个人边界与意图。" },
+                love: { en: "Profound romantic union and soulful mutual understanding.", zh: "深刻的浪漫结合与心照不宣的灵魂默契。" },
+                career: { en: "Partnerships based on trust and collaborative choices.", zh: "建立在高度信任与双赢基础上的合作关系。" }
+            },
+            {
+                id: 7,
+                name: { en: "The Chariot", zh: "战车" },
+                numeral: "VII",
+                element: "Water",
+                planet: "Cancer",
+                keywords: { en: ["Control", "Willpower", "Success", "Determination"], zh: ["自控", "意志力", "胜利", "果敢决心"] },
+                upright: { en: "Drive forward through focused determination. Harness opposing forces to overcome obstacles.", zh: "凭借专注的意志力勇往直前。驾驭相互冲突的力量，跨越一切障碍。" },
+                reversed: { en: "Lack of direction, feeling overwhelmed by external forces. Regain composure.", zh: "失去方向感或被外界环境所压倒。请暂停脚步，重整心态。" },
+                love: { en: "Overcoming relationship challenges together through shared resolve.", zh: "双方凭借共同的坚定信念，携手战胜感情中的坎坷与考验。" },
+                career: { en: "Triumphant breakthrough achieved by sheer grit and perseverance.", zh: "凭着坚韧不拔的毅力与冲劲，在事业上取得突破性的胜利。" }
+            },
+            {
+                id: 8,
+                name: { en: "Strength", zh: "力量" },
+                numeral: "VIII",
+                element: "Fire",
+                planet: "Leo",
+                keywords: { en: ["Courage", "Compassion", "Inner Power", "Patience"], zh: ["勇气", "慈悲", "内在力量", "包容与耐心"] },
+                upright: { en: "True power lies in gentle patience, compassion, and mastering wild impulses with calm grace.", zh: "真正的强大源于温柔的耐心与慈悲，以优雅沉稳的姿态驯服内心的躁动。" },
+                reversed: { en: "Self-doubt, raw anger, or temporary depletion of spirit. Practice inner gentle love.", zh: "自我怀疑、情绪失控或内心力量暂时的消耗。需要给予自己更多关爱。" },
+                love: { en: "Gentle understanding taming arguments and strengthening romantic intimacy.", zh: "以包容与理解化解摩擦，使彼此的情感羁绊更加牢固。" },
+                career: { en: "Handling high-pressure situations with calm composure and resilience.", zh: "在巨大的压力面前保持泰然自若，以强韧的心理素质化解危机。" }
+            },
+            {
+                id: 9,
+                name: { en: "The Hermit", zh: "隐士" },
+                numeral: "IX",
+                element: "Earth",
+                planet: "Virgo",
+                keywords: { en: ["Soul-Searching", "Introspection", "Inner Guidance", "Solitude"], zh: ["灵魂探索", "内省", "内在指引", "独处寻求真理"] },
+                upright: { en: "Withdraw temporarily from external noise to light your own lantern of inner truth.", zh: "暂时从外界喧嚣中抽离，点亮内心的明灯，寻觅属于你自己的真理。" },
+                reversed: { en: "Isolation, loneliness, or paranoia. Balance introspection with connection.", zh: "过度孤立、孤独沉溺或偏执。需在内省与社会连接之间找回平衡。" },
+                love: { en: "Taking time to understand your romantic desires and emotional maturity.", zh: "花时间沉淀自己，理清感情中的真正需求与成熟的心态。" },
+                career: { en: "Reflecting on your true purpose rather than chasing superficial praise.", zh: "重新思考工作的终极意义，而非盲目追逐表面的功名利禄。" }
+            },
+            {
+                id: 10,
+                name: { en: "Wheel of Fortune", zh: "命运之轮" },
+                numeral: "X",
+                element: "Fire",
+                planet: "Jupiter",
+                keywords: { en: ["Good Luck", "Karma", "Life Cycles", "Destiny"], zh: ["好运", "因果转轮", "生命周期", "命运契机"] },
+                upright: { en: "The cosmic wheel turns in your favor. Embrace change, unexpected synchronicities, and destiny.", zh: "命运的齿轮正朝着有利你的方向旋转。拥抱变革、意想不到的契机与命运。" },
+                reversed: { en: "Temporary setbacks, resistance to life changes. Remember cycles always continue.", zh: "暂时的波折或对变化的抗拒。请记住，生命的周期始终在循环流转。" },
+                love: { en: "Fated encounters, karma coming full circle in love life.", zh: "命中注定的相遇，或是情感生活中因果契机的成熟与显现。" },
+                career: { en: "Unexpected positive shifts, promotion, or fortunate coincidences.", zh: "意料之外的积极转变、晋升机遇或幸运的合作契机。" }
+            },
+            {
+                id: 11,
+                name: { en: "Justice", zh: "正义" },
+                numeral: "XI",
+                element: "Air",
+                planet: "Libra",
+                keywords: { en: ["Fairness", "Truth", "Cause & Effect", "Clarity"], zh: ["公正", "真理", "因果法则", "清晰决策"] },
+                upright: { en: "Truth prevails. Act with unwavering integrity; decisions made now carry karmic weight.", zh: "真相终将大白。秉持坚定不移的正直品质，此刻的决定将带来长远的因果影响。" },
+                reversed: { en: "Dishonesty, unfair treatment, or avoiding responsibility. Seek cosmic truth.", zh: "不公、推卸责任或偏离事实。需要勇敢面对真相，承担应有责任。" },
+                love: { en: "Honesty and total equality fostering peace between partners.", zh: "坦诚相待与完全平等的姿态，为双方带来和谐稳定的情感环境。" },
+                career: { en: "Legal matters resolved, fair contracts, and balanced workplace recognition.", zh: "法律或合同事务得到公正解决，努力获得职场上合理的认可。" }
+            },
+            {
+                id: 12,
+                name: { en: "The Hanged Man", zh: "倒吊人" },
+                numeral: "XII",
+                element: "Water",
+                planet: "Neptune",
+                keywords: { en: ["Surrender", "New Perspective", "Pausing", "Letting Go"], zh: ["顺应臣服", "换位视角", "暂停沉淀", "放下执念"] },
+                upright: { en: "Pause and look at things upside down. Surrendering control brings unexpected spiritual wisdom.", zh: "停下脚步换个角度审视当下。放下执念与掌控欲，往往能顿悟深层的智慧。" },
+                reversed: { en: "Stagnation, indecision, or unnecessary sacrifice. Break free from inertia.", zh: "停滞不前、优柔寡断或无谓的牺牲。是极打破僵局的时候了。" },
+                love: { en: "Patience required; view partner's perspective with empathy.", zh: "需要给予耐心；换位思考，用共情的心态理解对方。" },
+                career: { en: "A temporary hold that allows strategic pivot and creative breakthroughs.", zh: "阶段性的暂停，恰好为未来的策略转型与创意突破提供了契机。" }
+            },
+            {
+                id: 13,
+                name: { en: "Death", zh: "死神" },
+                numeral: "XIII",
+                element: "Water",
+                planet: "Scorpio",
+                keywords: { en: ["Endings", "Transformation", "Transition", "Rebirth"], zh: ["结束", "蜕变", "过渡转型", "新生"] },
+                upright: { en: "Clear away old leaves so new flowers may bloom. Welcome radical transformation and rebirth.", zh: "扫除枯枝败叶，新花方能绽放。勇敢拥抱彻底的蜕变与新生。" },
+                reversed: { en: "Resistance to change, lingering in painful habits. Allow the past to dissolve.", zh: "抗拒改变、死守痛苦的旧习。学会让过去彻底成为过去。" },
+                love: { en: "Shedding toxic relationship patterns to make space for genuine love.", zh: "告别有毒的情感模式，为真正健康的爱腾出心灵空间。" },
+                career: { en: "End of an obsolete phase opening doors to a fresh career cycle.", zh: "旧阶段的终结，正为全新的职业生涯与发展打开大门。" }
+            },
+            {
+                id: 14,
+                name: { en: "Temperance", zh: "节制" },
+                numeral: "XIV",
+                element: "Fire",
+                planet: "Sagittarius",
+                keywords: { en: ["Balance", "Moderation", "Patience", "Inner Harmony"], zh: ["平衡", "适度", "调和耐心", "内在和谐"] },
+                upright: { en: "Blend contrasting elements into calm alchemy. Patience and moderation yield true tranquility.", zh: "将截然不同的元素融合为平静的炼金术。耐心与适度会带来真正的宁静。" },
+                reversed: { en: "Extremes, imbalance, or haste. Re-center your energy field.", zh: "走极端、失去失衡或急于求成。请重新稳固你的内在能量场。" },
+                love: { en: "Peaceful compromise and alchemy of hearts.", zh: "心平气和的让步与沟通，实现两颗心灵的和谐交融。" },
+                career: { en: "Steady progress, conflict resolution, and harmonious teamwork.", zh: "循序渐进的稳步推进，化解冲突，促进团队间的协同合作。" }
+            },
+            {
+                id: 15,
+                name: { en: "The Devil", zh: "恶魔" },
+                numeral: "XV",
+                element: "Earth",
+                planet: "Capricorn",
+                keywords: { en: ["Attachment", "Shadow Self", "Materialism", "Illusion of Control"], zh: ["执念束缚", "阴影自我", "物质诱惑", "控制假象"] },
+                upright: { en: "Examine unhealthy attachments or limiting beliefs. The chains holding you are loose enough to slip off.", zh: "审视那些不健康的依恋或限制性信念。其实困住你的枷锁早已松动。" },
+                reversed: { en: "Breaking free from addiction, toxic ties, and reclaiming personal power.", zh: "摆脱不良依赖、断绝负面关系，重新夺回对自我的主导权。" },
+                love: { en: "Obsession vs healthy passion. Recognize codependent behaviors.", zh: "警惕盲目的控制欲与健康的激情。识别感情中过度依赖的行为。" },
+                career: { en: "Feeling trapped in a job purely for money; seeking true sovereignty.", zh: "感到陷入仅为金钱而工作的困境；开始寻找真正的自主权与价值。" }
+            },
+            {
+                id: 16,
+                name: { en: "The Tower", zh: "高塔" },
+                numeral: "XVI",
+                element: "Fire",
+                planet: "Mars",
+                keywords: { en: ["Sudden Upheaval", "Revelation", "Awakening", "Breakthrough"], zh: ["突发巨变", "真相大白", "觉醒", "打破虚妄"] },
+                upright: { en: "False structures crumble to reveal unshakeable truth. What falls was meant to be rebuilt better.", zh: "虚假的高塔崩塌，显露出不可动摇的真相。倒下的旧物是为了迎接更好的重建。" },
+                reversed: { en: "Averting disaster narrowly or delaying a necessary breakdown. Embrace renewal.", zh: "侥幸避开危机，或拖延了必要的变革。请坦然面对洗牌与重塑。" },
+                love: { en: "Shocking truths clearing the air for authentic intimacy.", zh: "突如其来的真相打破迷局，为建立真正坦诚的关系扫清障碍。" },
+                career: { en: "Sudden structural shakeup in company or paradigm shift in perspective.", zh: "公司架构的骤变，或是个人职业思维方式迎来的颠覆性转变。" }
+            },
+            {
+                id: 17,
+                name: { en: "The Star", zh: "星星" },
+                numeral: "XVII",
+                element: "Air",
+                planet: "Aquarius",
+                keywords: { en: ["Hope", "Faith", "Inspiration", "Serenity"], zh: ["希望", "信念", "灵感迸发", "宁静自得"] },
+                upright: { en: "Bask in serene cosmic hope and spiritual healing. Your faith is rewarded with abundant light.", zh: "沐浴在宁静的宇宙希望与心灵疗愈之中。你的信念将换来璀璨的光芒。" },
+                reversed: { en: "Despair, cynicism, or lost focus. Turn back to quiet faith.", zh: "暂时失落、冷漠或失去焦点。请重新找回内心那份安静的信念。" },
+                love: { en: "Emotional healing after heartbreak; bright future in love.", zh: "受创心灵得到疗愈；感情前景迎来一片晴朗与希望。" },
+                career: { en: "Creative inspiration flowing effortlessly; recognition of authentic gift.", zh: "创意灵感源源不断；你的真实才华与天赋得到高度认可。" }
+            },
+            {
+                id: 18,
+                name: { en: "The Moon", zh: "月亮" },
+                numeral: "XVIII",
+                element: "Water",
+                planet: "Pisces",
+                keywords: { en: ["Illusion", "Dreams", "Subconscious", "Fear"], zh: ["幻象", "潜意识梦境", "迷茫", "内在恐惧"] },
+                upright: { en: "Navigate the misty realm of dreams and shadow. Unconscious fears surface for gentle release.", zh: "穿行于梦境与阴影的迷雾之中。隐藏的恐惧正浮出水面，等待被温柔接纳与释放。" },
+                reversed: { en: "Confusion lifts, illusions are shattered, truth emerges.", zh: "迷雾散去，幻象破灭，事实的真相逐渐变得清晰明朗。" },
+                love: { en: "Misunderstandings or deep intuitive sensitivity in relationships.", zh: "感情中可能存在误解，或双方处于极其敏感的直觉感应期。" },
+                career: { en: "Uncertainty in business dealings; double-check facts before signing.", zh: "商业事务中存在不确定因素；签署协议前请仔细核实细节。" }
+            },
+            {
+                id: 19,
+                name: { en: "The Sun", zh: "太阳" },
+                numeral: "XIX",
+                element: "Fire",
+                planet: "Sun",
+                keywords: { en: ["Joy", "Success", "Vitality", "Warmth"], zh: ["喜悦", "成功", "生命力", "光明与温暖"] },
+                upright: { en: "Radiant warmth, joyful success, and absolute clarity! Life shines brightly upon your path.", zh: "灿烂的温暖、令人欣喜的成功与彻底的清晰！生命之光正照亮你的前行之路。" },
+                reversed: { en: "Temporary clouds obscuring joy. Warmth remains beneath the surface.", zh: "乌云短暂遮蔽了阳光，但底层的温暖与活力从未消逝。" },
+                love: { en: "Pure joy, celebration, and playful romance.", zh: "纯粹的快乐、值得庆祝的甜蜜时刻，以及轻松愉快的浪漫。" },
+                career: { en: "Vibrant enthusiasm, brilliant recognition, and goal attainment.", zh: "充满活力的工作热情、卓越的成就认可与既定目标的顺利实现。" }
+            },
+            {
+                id: 20,
+                name: { en: "Judgement", zh: "审判" },
+                numeral: "XX",
+                element: "Fire",
+                planet: "Pluto",
+                keywords: { en: ["Reckoning", "Awakening", "Absolution", "Higher Call"], zh: ["灵魂召集", "觉醒", "释怀重塑", "高维召唤"] },
+                upright: { en: "Hear the cosmic trumpet call. Reflect on your journey, forgive the past, and step into higher purpose.", zh: "倾听宇宙召唤的号角。回顾过往、原谅过去，迈向更高层次的人生使命。" },
+                reversed: { en: "Self-doubt, harsh self-criticism, ignoring a higher calling.", zh: "自我怀疑、苛刻的自我批判，或是逃避内心的召唤。" },
+                love: { en: "Forgiveness and honest evaluation bringing closure or rebirth.", zh: "坦诚审视与宽恕，为感情带来圆满的交代或全新的升华。" },
+                career: { en: "Recognizing your true vocation and making decisive life shifts.", zh: "明确自己真正的天职所在，做出影响深远的人生决定。" }
+            },
+            {
+                id: 21,
+                name: { en: "The World", zh: "世界" },
+                numeral: "XXI",
+                element: "Earth",
+                planet: "Saturn",
+                keywords: { en: ["Completion", "Integration", "Wholeness", "Travel"], zh: ["圆满完成", "融合整合", "完整自足", "广阔天地"] },
+                upright: { en: "A major cycle reaches triumphant completion! You are whole, integrated, and ready for the next adventure.", zh: "一段重大的人生周期迎来圆满落幕！你已融会贯通，准备好迎接全新的世界。" },
+                reversed: { en: "Incomplete goals or seeking external validation. Close loose ends.", zh: "未竟的目标或过度寻求外界认可。请收束未尽的事务。" },
+                love: { en: "A deeply fulfilling, complete partnership or joint life milestone.", zh: "令人高度充实与圆满的伴侣关系，或携手迈入重要的人生里程碑。" },
+                career: { en: "Global success, project completion, and major accomplishment.", zh: "项目的圆满收官、广阔的发展空间与重大阶段性成就。" }
+            }
+        ];
+
+        /* SPREAD CONFIGURATIONS WITH BILINGUAL TITLES */
+        const SPREADS = {
+            single: {
+                title: { en: "Single Card Guidance", zh: "单牌核心指引" },
+                count: 1,
+                slots: [
+                    { title: { en: "Core Message / Daily Focus", zh: "核心启示 / 当下焦点" } }
+                ]
+            },
+            three: {
+                title: { en: "3-Card Timeline Spread", zh: "三牌时间线牌阵" },
+                count: 3,
+                slots: [
+                    { title: { en: "1. The Past / Foundation", zh: "1. 过去 / 起因根基" } },
+                    { title: { en: "2. The Present / Challenge", zh: "2. 现状 / 当下挑战" } },
+                    { title: { en: "3. The Future / Outcome", zh: "3. 未来 / 发展趋势" } }
+                ]
+            },
+            love: {
+                title: { en: "Love & Relationship Spread", zh: "情感与关系探索牌阵" },
+                count: 3,
+                slots: [
+                    { title: { en: "1. Your Heart / Energy", zh: "1. 你的心境 / 能量状态" } },
+                    { title: { en: "2. Their Heart / Dynamic", zh: "2. 对方心境 / 关系互动" } },
+                    { title: { en: "3. Higher Spiritual Path", zh: "3. 关系发展 / 灵性指引" } }
+                ]
+            }
+        };
+
+        /* ==========================================================================
+           2. GLOBAL STATE & SOUND ENGINE (WEB AUDIO API)
+           ========================================================================== */
+        let state = {
+            lang: 'zh', // Default to Chinese as requested
+            currentSpreadKey: 'single',
+            cardsSelected: [],
+            shuffledDeck: [],
+            soundEnabled: true,
+            audioCtx: null,
+            journal: JSON.parse(localStorage.getItem('mystic_journal') || '[]'),
+            dailyStreak: parseInt(localStorage.getItem('mystic_streak') || '0'),
+            lastDailyDate: localStorage.getItem('mystic_daily_date') || ''
+        };
+
+        // Web Audio API Sound Generation
+        function initAudioContext() {
+            if (!state.audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                state.audioCtx = new AudioContext();
+            }
+            if (state.audioCtx.state === 'suspended') {
+                state.audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            if (!state.soundEnabled) return;
+            initAudioContext();
+            const ctx = state.audioCtx;
+            if (!ctx) return;
+
+            const now = ctx.currentTime;
+
+            if (type === 'shuffle') {
+                const bufferSize = ctx.sampleRate * 0.15;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 1200;
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                noise.start(now);
+
+            } else if (type === 'flip') {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, now); // D5
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.25); // A5
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.4);
+
+            } else if (type === 'select') {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(320, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            }
+        }
+
+        function toggleSound() {
+            state.soundEnabled = !state.soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            const btn = document.getElementById('sound-btn');
+            if (state.soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high';
+                btn.classList.add('text-gold-300');
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark';
+                btn.classList.remove('text-gold-300');
+            }
+        }
+
+        /* ==========================================================================
+           3. LANGUAGE SWITCHING ENGINE
+           ========================================================================== */
+        function toggleLanguage() {
+            state.lang = state.lang === 'en' ? 'zh' : 'en';
+            playSound('select');
+            updateUIStrings();
+            resetReadingDesk();
+            if (!document.getElementById('tab-daily').classList.contains('hidden')) {
+                checkDailyStatus();
+            }
+            if (!document.getElementById('tab-journal').classList.contains('hidden')) {
+                renderJournalEntries();
+            }
+        }
+
+        function updateUIStrings() {
+            const i18n = UI_I18N[state.lang];
+            document.getElementById('lang-label').innerText = state.lang === 'en' ? '中文' : 'English';
+            
+            document.getElementById('app-title').innerText = i18n.appTitle;
+            document.getElementById('app-subtitle').innerText = i18n.appSubtitle;
+            document.getElementById('nav-text-reading').innerText = i18n.navReading;
+            document.getElementById('nav-text-daily').innerText = i18n.navDaily;
+            document.getElementById('nav-text-journal').innerText = i18n.navJournal;
+            
+            document.getElementById('banner-title').innerText = i18n.bannerTitle;
+            document.getElementById('banner-subtitle').innerText = i18n.bannerSubtitle;
+            
+            document.getElementById('spread-btn-single').innerText = i18n.spreadSingle;
+            document.getElementById('spread-btn-three').innerText = i18n.spreadThree;
+            document.getElementById('spread-btn-love').innerText = i18n.spreadLove;
+            
+            document.getElementById('btn-text-shuffle').innerText = i18n.shuffleBtn;
+            document.getElementById('status-prefix').innerText = i18n.statusPrefix;
+            document.getElementById('status-suffix').innerText = i18n.statusSuffix;
+            document.getElementById('btn-text-reveal').innerText = i18n.revealBtn;
+            
+            document.getElementById('daily-title').innerText = i18n.dailyTitle;
+            document.getElementById('daily-subtitle').innerText = i18n.dailySubtitle;
+            document.getElementById('streak-label').innerText = i18n.streakLabel;
+            document.getElementById('daily-tap-text').innerText = i18n.dailyTap;
+            document.getElementById('btn-text-save-daily').innerText = i18n.saveDailyBtn;
+            
+            document.getElementById('journal-title').innerText = i18n.journalTitle;
+            document.getElementById('journal-subtitle').innerText = i18n.journalSubtitle;
+            document.getElementById('btn-text-clear').innerText = i18n.clearBtn;
+            
+            document.getElementById('modal-subtitle').innerText = i18n.modalSubtitle;
+            document.getElementById('journal-user-note').placeholder = i18n.inputPlaceholder;
+            document.getElementById('btn-text-save-chronicle').innerText = i18n.saveChronicleBtn;
+            document.getElementById('footer-text').innerText = i18n.footerText;
+        }
+
+        /* ==========================================================================
+           4. CARD ART SVG GENERATOR
+           ========================================================================== */
+        function generateCardSvgBack() {
+            return `
+            <svg class="w-full h-full" viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">
+                <rect width="200" height="320" rx="10" fill="#0c0a1a"/>
+                <rect x="8" y="8" width="184" height="304" rx="6" fill="none" stroke="#D4AF37" stroke-width="1.5" stroke-dasharray="4,2"/>
+                <rect x="14" y="14" width="172" height="292" rx="4" fill="none" stroke="#D4AF37" stroke-width="1"/>
+                
+                <g stroke="#D4AF37" stroke-width="0.8" fill="none" opacity="0.6">
+                    <circle cx="100" cy="160" r="60"/>
+                    <circle cx="100" cy="160" r="45"/>
+                    <circle cx="100" cy="160" r="30"/>
+                    <path d="M 100 80 L 100 240 M 20 160 L 180 160"/>
+                    <path d="M 43.4 103.4 L 156.6 216.6 M 43.4 216.6 L 156.6 103.4"/>
+                </g>
+                <circle cx="100" cy="160" r="8" fill="#D4AF37"/>
+                <polygon points="100,140 104,156 120,160 104,164 100,180 96,164 80,160 96,156" fill="#FFF2C6"/>
+            </svg>`;
+        }
+
+        function generateCardSvgFront(card, isReversed = false) {
+            const i18n = UI_I18N[state.lang];
+            const cardName = card.name[state.lang];
+            const elemName = i18n.elements[card.element] || card.element;
+            const statusLabel = isReversed ? i18n.reversed : i18n.upright;
+
+            return `
+            <div class="relative w-full h-full flex flex-col justify-between p-2 text-center select-none overflow-hidden">
+                <div class="absolute inset-1.5 border border-gold-500/50 rounded-lg pointer-events-none"></div>
+
+                <div class="pt-2">
+                    <span class="font-cinzel text-[10px] text-gold-500 tracking-widest block">${card.numeral}</span>
+                    <h4 class="font-cinzel text-xs font-bold gold-gradient-text tracking-wider uppercase">${cardName}</h4>
+                </div>
+
+                <div class="my-auto py-2 flex flex-col items-center justify-center">
+                    <div class="w-16 h-16 rounded-full border border-gold-500/40 bg-midnight/80 flex items-center justify-center text-gold-300 text-2xl shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                        ${getCardIcon(card.id)}
+                    </div>
+                    <div class="mt-2 flex items-center gap-2 text-[9px] font-cinzel text-slate-400">
+                        <span><i class="fa-solid fa-bolt mr-1"></i>${elemName}</span> •
+                        <span><i class="fa-solid fa-planet-ringed mr-1"></i>${card.planet}</span>
+                    </div>
+                </div>
+
+                <div class="pb-2">
+                    <span class="font-cinzel text-[9px] uppercase tracking-widest px-2 py-0.5 rounded border border-gold-500/30 bg-midnight/60 text-gold-300">
+                        ${statusLabel}
+                    </span>
+                </div>
+            </div>`;
+        }
+
+        function getCardIcon(id) {
+            const icons = {
+                0: '<i class="fa-solid fa-feather"></i>',
+                1: '<i class="fa-solid fa-wand-magic-sparkles"></i>',
+                2: '<i class="fa-solid fa-moon"></i>',
+                3: '<i class="fa-solid fa-crown"></i>',
+                4: '<i class="fa-solid fa-chess-king"></i>',
+                5: '<i class="fa-solid fa-ankh"></i>',
+                6: '<i class="fa-solid fa-heart"></i>',
+                7: '<i class="fa-solid fa-shield-halved"></i>',
+                8: '<i class="fa-solid fa-paw"></i>',
+                9: '<i class="fa-solid fa-lantern"></i>',
+                10: '<i class="fa-solid fa-dharmachakra"></i>',
+                11: '<i class="fa-solid fa-scale-balanced"></i>',
+                12: '<i class="fa-solid fa-hourglass"></i>',
+                13: '<i class="fa-solid fa-skull"></i>',
+                14: '<i class="fa-solid fa-flask text-lg"></i>',
+                15: '<i class="fa-solid fa-spaghetti-monster-flying"></i>',
+                16: '<i class="fa-solid fa-bolt-lightning"></i>',
+                17: '<i class="fa-solid fa-star"></i>',
+                18: '<i class="fa-solid fa-cloud-moon"></i>',
+                19: '<i class="fa-solid fa-sun"></i>',
+                20: '<i class="fa-solid fa-bullhorn"></i>',
+                21: '<i class="fa-solid fa-globe"></i>'
+            };
+            return icons[id] || '<i class="fa-solid fa-sparkles"></i>';
+        }
+
+        /* ==========================================================================
+           5. TAB NAVIGATION & SPREAD LOGIC
+           ========================================================================== */
+        function switchTab(tabKey) {
+            playSound('select');
+            ['reading', 'daily', 'journal'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`nav-${t}`).className = "px-3 py-2 rounded-lg text-slate-300 hover:text-gold-300 transition";
+            });
+            document.getElementById(`tab-${tabKey}`).classList.remove('hidden');
+            document.getElementById(`nav-${tabKey}`).className = "px-3 py-2 rounded-lg text-gold-300 border border-gold-500/40 bg-gold-500/10 transition";
+
+            if (tabKey === 'daily') checkDailyStatus();
+            if (tabKey === 'journal') renderJournalEntries();
+        }
+
+        function selectSpread(spreadKey) {
+            playSound('select');
+            state.currentSpreadKey = spreadKey;
+            
+            document.querySelectorAll('.spread-btn').forEach(btn => {
+                btn.className = "spread-btn px-4 py-2.5 rounded-xl border border-gold-500/30 bg-cosmic/80 text-slate-300 hover:border-gold-500/60 transition";
+            });
+            document.getElementById(`spread-${spreadKey}`).className = "spread-btn px-4 py-2.5 rounded-xl border border-gold-500/60 bg-gold-500/20 text-gold-100 font-semibold shadow-[0_0_15px_rgba(212,175,55,0.2)]";
+
+            resetReadingDesk();
+        }
+
+        function resetReadingDesk() {
+            state.cardsSelected = [];
+            document.getElementById('reading-complete-banner').classList.add('hidden');
+            
+            const spreadConfig = SPREADS[state.currentSpreadKey];
+            document.getElementById('cards-needed-count').innerText = spreadConfig.count - state.cardsSelected.length;
+            document.getElementById('reading-status-text').classList.remove('hidden');
+
+            const slotsContainer = document.getElementById('spread-slots-container');
+            slotsContainer.innerHTML = '';
+
+            spreadConfig.slots.forEach((slot, idx) => {
+                const slotTitle = slot.title[state.lang];
+                const slotEl = document.createElement('div');
+                slotEl.className = "flex flex-col items-center gap-2";
+                slotEl.innerHTML = `
+                    <div id="slot-card-${idx}" class="w-28 sm:w-36 h-44 sm:h-56 perspective-1000">
+                        <div class="card-inner border-2 border-dashed border-gold-500/30 rounded-xl flex items-center justify-center p-3 text-center bg-midnight/40">
+                            <span class="font-cinzel text-xs text-gold-500/50 uppercase tracking-wider">${slotTitle}</span>
+                        </div>
+                    </div>
+                    <span class="font-cinzel text-[11px] text-slate-400 font-semibold">${slotTitle}</span>
+                `;
+                slotsContainer.appendChild(slotEl);
+            });
+
+            shuffleDeckAnimation();
+        }
+
+        /* ==========================================================================
+           6. INTERACTIVE FAN DECK & CARD SELECTION
+           ========================================================================== */
+        function shuffleDeckAnimation() {
+            playSound('shuffle');
+            state.shuffledDeck = [...MAJOR_ARCANA].sort(() => Math.random() - 0.5);
+
+            const wrapper = document.getElementById('fan-deck-wrapper');
+            wrapper.innerHTML = '';
+
+            const totalCardsInFan = 18;
+            const angleStep = 60 / (totalCardsInFan - 1);
+
+            for (let i = 0; i < totalCardsInFan; i++) {
+                const cardEl = document.createElement('div');
+                const angle = -30 + (i * angleStep);
+                const xOffset = (i - totalCardsInFan / 2) * 18;
+
+                cardEl.className = "fan-card absolute bottom-0 w-24 h-36 sm:w-28 sm:h-40 rounded-xl overflow-hidden shadow-xl border border-gold-500/50 bg-midnight";
+                cardEl.style.transform = `translateX(${xOffset}px) rotate(${angle}deg)`;
+                cardEl.style.zIndex = i + 1;
+                cardEl.innerHTML = generateCardSvgBack();
+
+                cardEl.onclick = () => pickCardFromFan(i, cardEl);
+                wrapper.appendChild(cardEl);
+            }
+        }
+
+        function pickCardFromFan(fanIndex, cardEl) {
+            const spreadConfig = SPREADS[state.currentSpreadKey];
+            if (state.cardsSelected.length >= spreadConfig.count) return;
+
+            playSound('select');
+
+            const drawnData = state.shuffledDeck.pop();
+            const isReversed = Math.random() < 0.3;
+            const slotIndex = state.cardsSelected.length;
+
+            state.cardsSelected.push({
+                card: drawnData,
+                isReversed: isReversed,
+                slotTitle: spreadConfig.slots[slotIndex].title
+            });
+
+            cardEl.style.opacity = '0.2';
+            cardEl.style.pointerEvents = 'none';
+
+            renderSlotCard(slotIndex, drawnData, isReversed);
+
+            const remaining = spreadConfig.count - state.cardsSelected.length;
+            document.getElementById('cards-needed-count').innerText = remaining;
+
+            if (remaining === 0) {
+                document.getElementById('reading-status-text').classList.add('hidden');
+                document.getElementById('reading-complete-banner').classList.remove('hidden');
+                playSound('flip');
+            }
+        }
+
+        function renderSlotCard(slotIndex, card, isReversed) {
+            const slotContainer = document.getElementById(`slot-card-${slotIndex}`);
+            if (!slotContainer) return;
+
+            slotContainer.innerHTML = `
+                <div id="slot-inner-${slotIndex}" class="card-inner cursor-pointer" onclick="flipSlotCard(${slotIndex})">
+                    <div class="card-face card-back p-1">
+                        ${generateCardSvgBack()}
+                    </div>
+                    <div class="card-face card-front">
+                        ${generateCardSvgFront(card, isReversed)}
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                flipSlotCard(slotIndex);
+            }, 200);
+        }
+
+        function flipSlotCard(slotIndex) {
+            playSound('flip');
+            const inner = document.getElementById(`slot-inner-${slotIndex}`);
+            const cardData = state.cardsSelected[slotIndex];
+            if (!inner || !cardData) return;
+
+            if (cardData.isReversed) {
+                inner.classList.add('is-reversed');
+            } else {
+                inner.classList.add('is-flipped');
+            }
+        }
+
+        /* ==========================================================================
+           7. READING INTERPRETATION MODAL
+           ========================================================================== */
+        function openReadingDetailsModal() {
+            playSound('flip');
+            const i18n = UI_I18N[state.lang];
+            const spreadConfig = SPREADS[state.currentSpreadKey];
+            document.getElementById('modal-spread-title').innerText = spreadConfig.title[state.lang];
+
+            const modalBody = document.getElementById('modal-body-content');
+            modalBody.innerHTML = '';
+
+            state.cardsSelected.forEach((item, idx) => {
+                const c = item.card;
+                const cardName = c.name[state.lang];
+                const slotTitleText = item.slotTitle[state.lang];
+                const statusTag = item.isReversed ? `(${i18n.reversed})` : `(${i18n.upright})`;
+                const mainMeaning = item.isReversed ? c.reversed[state.lang] : c.upright[state.lang];
+
+                const cardBlock = document.createElement('div');
+                cardBlock.className = "bg-midnight/70 gold-border rounded-2xl p-6 space-y-4";
+                cardBlock.innerHTML = `
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-gold-500/20 pb-3">
+                        <div>
+                            <span class="font-cinzel text-xs text-gold-500 font-semibold tracking-wider">${slotTitleText}</span>
+                            <h4 class="font-cinzel text-xl font-bold gold-gradient-text">${cardName} ${statusTag}</h4>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded-full bg-gold-500/10 border border-gold-500/30 text-[10px] font-cinzel text-gold-300 uppercase">${i18n.elements[c.element] || c.element}</span>
+                            <span class="px-2.5 py-1 rounded-full bg-gold-500/10 border border-gold-500/30 text-[10px] font-cinzel text-gold-300 uppercase">${c.planet}</span>
+                        </div>
+                    </div>
+
+                    <p class="text-base text-slate-200 leading-relaxed italic">
+                        "${mainMeaning}"
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 text-sm">
+                        <div class="bg-cosmic/50 p-3 rounded-xl border border-gold-500/10">
+                            <span class="font-cinzel text-xs font-bold text-gold-300 block mb-1"><i class="fa-solid fa-heart mr-1.5"></i>${i18n.loveGuidance}</span>
+                            <span class="text-slate-300">${c.love[state.lang]}</span>
+                        </div>
+                        <div class="bg-cosmic/50 p-3 rounded-xl border border-gold-500/10">
+                            <span class="font-cinzel text-xs font-bold text-gold-300 block mb-1"><i class="fa-solid fa-briefcase mr-1.5"></i>${i18n.careerInsight}</span>
+                            <span class="text-slate-300">${c.career[state.lang]}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-1.5 pt-2">
+                        ${c.keywords[state.lang].map(kw => `<span class="px-2 py-0.5 rounded bg-midnight border border-gold-500/20 font-cinzel text-[10px] text-slate-400">#${kw}</span>`).join('')}
+                    </div>
+                `;
+                modalBody.appendChild(cardBlock);
+            });
+
+            const modal = document.getElementById('interpretation-modal');
+            const container = document.getElementById('modal-container');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            container.classList.remove('scale-95');
+            container.classList.add('scale-100');
+        }
+
+        function closeReadingDetailsModal() {
+            playSound('select');
+            const modal = document.getElementById('interpretation-modal');
+            const container = document.getElementById('modal-container');
+            container.classList.remove('scale-100');
+            container.classList.add('scale-95');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        /* ==========================================================================
+           8. DAILY TAROT DRAW LOGIC
+           ========================================================================== */
+        function checkDailyStatus() {
+            const i18n = UI_I18N[state.lang];
+            const today = new Date().toDateString();
+            document.getElementById('streak-counter').innerText = `${state.dailyStreak} ${i18n.streakDays}`;
+
+            const tag = document.getElementById('daily-status-tag');
+            if (state.lastDailyDate === today) {
+                tag.innerText = i18n.dailyDrawn;
+                tag.className = "px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 font-cinzel text-[10px] text-emerald-300 uppercase tracking-widest";
+            } else {
+                tag.innerText = i18n.dailyReady;
+                tag.className = "px-2.5 py-1 rounded-full bg-gold-500/10 border border-gold-500/30 font-cinzel text-[10px] text-gold-300 uppercase tracking-widest";
+            }
+        }
+
+        function drawDailyCard() {
+            const inner = document.getElementById('daily-card-inner');
+            if (inner.classList.contains('is-flipped')) return;
+
+            playSound('flip');
+            const cardIndex = Math.floor(Math.random() * MAJOR_ARCANA.length);
+            const dailyCard = MAJOR_ARCANA[cardIndex];
+
+            const frontEl = document.getElementById('daily-card-front');
+            frontEl.innerHTML = generateCardSvgFront(dailyCard, false);
+
+            inner.classList.add('is-flipped');
+
+            document.getElementById('daily-card-title').innerText = dailyCard.name[state.lang];
+            document.getElementById('daily-card-excerpt').innerText = dailyCard.upright[state.lang];
+            document.getElementById('daily-actions').classList.remove('hidden');
+
+            const today = new Date().toDateString();
+            if (state.lastDailyDate !== today) {
+                state.dailyStreak += 1;
+                state.lastDailyDate = today;
+                localStorage.setItem('mystic_streak', state.dailyStreak);
+                localStorage.setItem('mystic_daily_date', today);
+                checkDailyStatus();
+            }
+        }
+
+        function saveDailyToJournal() {
+            const i18n = UI_I18N[state.lang];
+            const cardTitle = document.getElementById('daily-card-title').innerText;
+            const entry = {
+                id: Date.now(),
+                date: new Date().toLocaleDateString(),
+                title: `${state.lang === 'zh' ? '每日一牌' : 'Daily Draw'}: ${cardTitle}`,
+                cards: [{ name: cardTitle, text: document.getElementById('daily-card-excerpt').innerText }],
+                note: state.lang === 'zh' ? '每日能量对齐与觉察。' : 'Daily alignment reflection.'
+            };
+            state.journal.unshift(entry);
+            localStorage.setItem('mystic_journal', JSON.stringify(state.journal));
+            playSound('select');
+            alert(i18n.savedDailyAlert);
+        }
+
+        /* ==========================================================================
+           9. JOURNAL & LOCALSTORAGE MANAGEMENT
+           ========================================================================== */
+        function saveCurrentReadingToJournal() {
+            if (state.cardsSelected.length === 0) return;
+            const i18n = UI_I18N[state.lang];
+
+            const userNote = document.getElementById('journal-user-note').value || (state.lang === 'zh' ? '直觉灵性解读。' : 'Intuitive divine reading.');
+            const spreadConfig = SPREADS[state.currentSpreadKey];
+
+            const entry = {
+                id: Date.now(),
+                date: new Date().toLocaleDateString(),
+                title: spreadConfig.title[state.lang],
+                cards: state.cardsSelected.map(item => ({
+                    name: `${item.card.name[state.lang]} ${item.isReversed ? `(${i18n.reversed})` : `(${i18n.upright})`}`,
+                    text: item.isReversed ? item.card.reversed[state.lang] : item.card.upright[state.lang]
+                })),
+                note: userNote
+            };
+
+            state.journal.unshift(entry);
+            localStorage.setItem('mystic_journal', JSON.stringify(state.journal));
+            
+            document.getElementById('journal-user-note').value = '';
+            closeReadingDetailsModal();
+            playSound('select');
+            alert(i18n.savedAlert);
+        }
+
+        function renderJournalEntries() {
+            const i18n = UI_I18N[state.lang];
+            const container = document.getElementById('journal-entries-list');
+            container.innerHTML = '';
+
+            if (state.journal.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12 text-slate-500 font-cinzel text-sm">
+                        <i class="fa-solid fa-scroll text-3xl mb-2 block text-gold-500/30"></i>
+                        ${i18n.noJournal}
+                    </div>`;
+                return;
+            }
+
+            state.journal.forEach(entry => {
+                const itemEl = document.createElement('div');
+                itemEl.className = "bg-cosmic/70 gold-border rounded-2xl p-6 space-y-3 font-cormorant";
+                itemEl.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-gold-500/20 pb-2">
+                        <h4 class="font-cinzel text-lg font-bold gold-gradient-text">${entry.title}</h4>
+                        <span class="font-cinzel text-[10px] text-slate-400">${entry.date}</span>
+                    </div>
+                    <div class="space-y-2">
+                        ${entry.cards.map(c => `
+                            <div class="text-xs bg-midnight/50 p-2.5 rounded-lg border border-gold-500/10">
+                                <span class="font-cinzel text-gold-300 font-semibold block">${c.name}</span>
+                                <p class="text-slate-300 italic">${c.text}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="pt-1 text-xs text-slate-400 border-t border-gold-500/10 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-nib text-gold-500/60"></i>
+                        <span class="italic">"${entry.note}"</span>
+                    </div>
+                `;
+                container.appendChild(itemEl);
+            });
+        }
+
+        function clearJournal() {
+            const i18n = UI_I18N[state.lang];
+            if (confirm(i18n.confirmClear)) {
+                state.journal = [];
+                localStorage.removeItem('mystic_journal');
+                renderJournalEntries();
+            }
+        }
+
+        /* ==========================================================================
+           10. AMBIENT STARFIELD CANVAS ANIMATION
+           ========================================================================== */
+        function initStarfield() {
+            const canvas = document.getElementById('stars-canvas');
+            const ctx = canvas.getContext('2d');
+            let stars = [];
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                stars = [];
+                for (let i = 0; i < 120; i++) {
+                    stars.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: Math.random() * 1.8,
+                        alpha: Math.random(),
+                        speed: 0.005 + Math.random() * 0.015
+                    });
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                stars.forEach(star => {
+                    star.alpha += star.speed;
+                    if (star.alpha > 1 || star.alpha < 0) star.speed = -star.speed;
+
+                    ctx.fillStyle = `rgba(245, 215, 127, ${Math.abs(star.alpha) * 0.7})`;
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                requestAnimationFrame(animate);
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+            animate();
+        }
+
+        /* ==========================================================================
+           11. APP INITIALIZATION
+           ========================================================================== */
+        window.addEventListener('DOMContentLoaded', () => {
+            initStarfield();
+            updateUIStrings();
+            resetReadingDesk();
+        });
+    </script>
+</body>
+</html>
